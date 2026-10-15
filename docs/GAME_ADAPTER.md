@@ -25,10 +25,7 @@ L'installation est toujours désarmée. Une perte de focus, ouverture de menu,
 reconnexion ou changement de monde/joueur désarme les modules. Il faut réarmer
 après le retour à un contexte admissible.
 
-L'adaptateur exige un pair réseau de boucle locale, une adresse de connexion
-numérique explicite `127.0.0.1` ou `::1`, et un proxy Java de type DIRECT.
-La partie solo à canal interne et les noms DNS, même `localhost`, ne sont pas
-admis par cette version. Cette restriction est une limitation modifiable du projet.
+Depuis la version 0.3.1, le solo et les serveurs distants sont admissibles : aucune restriction d'adresse ni de proxy. Un monde et un joueur actifs, le focus du jeu et l'absence de menu restent nécessaires. F8 reste requis après un changement de contexte. Le statut expose `networkPolicy=any; adapterVersion=0.3.1`.
 
 Le fichier `lunar-local-lab.properties` est créé dans `Minecraft.mcDataDir`.
 Pour l'instance inspectée, il se trouve dans `%APPDATA%\.minecraft` :
@@ -108,3 +105,7 @@ Fermer l'instance avant de remplacer/recompiler la DLL qu'elle utilise.
 
 Cette version ne constitue pas un mod Forge : la classe Java sert d'adaptateur
 au thread applicatif, tandis que les décisions principales restent dans le cœur C++.
+
+## Mise a jour 0.3.1
+
+Fermer puis relancer Minecraft avant de charger la nouvelle DLL. Arreter/Installer ne remplace pas une classe Java ou une DLL deja chargee. Les preuves historiques ci-dessus concernent la version precedente ; les actions actives en solo ou serveur distant ne sont pas encore validees en jeu.

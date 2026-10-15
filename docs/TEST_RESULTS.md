@@ -108,3 +108,8 @@ les collisions pendant une attaque ou le comportement du serveur. La CI a été
 
 Compilation MSVC Release de lunar_control.exe reussie. CTest : 7/7 tests reussis, dont control_panel_validation (bornes, nombres invalides et cadence fractionnaire). Aucun essai graphique interactif ou nouvel essai d'action en jeu n'est revendique.
 
+
+## Version 0.3.1 - restriction reseau retiree (2026-10-16)
+
+Compilation MSVC x64 dans work/build-0.3.1 reussie. CTest : 7/7 reussis. Le test de contexte accepte les pairs distants et l'absence de pair direct, conserve le refus dans les menus/hors focus/sans monde et verifie l'annulation des actions apres changement de contexte. Test-ProcessDiagnostic.ps1 execute avec ce dossier : reussi sur une JVM de test, deux cycles de chargement/dechargement. Aucun essai actif en jeu de cette version n'est revendique.
+

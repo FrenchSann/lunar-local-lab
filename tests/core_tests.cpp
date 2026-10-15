@@ -24,10 +24,10 @@ void contextTest() {
     CHECK(c.arm(s.context));
     s.block = true; a = c.tick(s); CHECK(a[0].kind == ActionKind::BeginMining);
     s.context.peer = "192.168.0.1"; a = c.tick(s); CHECK(a.size() == 1 && a[0].kind == ActionKind::EndMining);
-    CHECK(!c.revalidate(a[0], s)); CHECK(!c.arm(s.context));
-    for (const auto* peer : {"localhost", "127.0.0.1.evil", "::ffff:127.0.0.1", "8.8.8.8"}) { s.context.peer = peer; CHECK(!s.context.eligible()); }
+    CHECK(!c.revalidate(a[0], s)); CHECK(c.tick(s).empty()); CHECK(c.arm(s.context));
+    for (const auto* peer : {"localhost", "127.0.0.1.evil", "::ffff:127.0.0.1", "8.8.8.8"}) { s.context.peer = peer; CHECK(s.context.eligible()); }
     s.context.peer = "::1"; CHECK(s.context.eligible());
-    s.context.direct = false; CHECK(!s.context.eligible()); s.context.direct = true;
+    s.context.direct = false; s.context.peer.clear(); CHECK(s.context.eligible()); s.context.direct = true;
     s.context.menu = true; CHECK(!s.context.eligible()); s.context.menu = false;
     s.context.focused = false; CHECK(!s.context.eligible()); s.context.focused = true;
     s.context.world = false; CHECK(!s.context.eligible());

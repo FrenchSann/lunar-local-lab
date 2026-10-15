@@ -15,7 +15,7 @@ Le pont lit les objets verifies et applique les actions via JNI sur le thread Mi
 4. Charger le fichier ou choisir les valeurs, puis Enregistrer.
 5. Cliquer Arreter puis Installer pour relire la configuration ; Installer charge
    le pont dans le processus selectionne. Verifier la reponse avec Etat.
-6. Revenir au jeu connecte directement a `127.0.0.1` ou `::1`, fermer les menus,
+6. Revenir dans un monde solo ou sur un serveur, fermer les menus,
    puis F8 pour armer. F9 arrete les modules.
 
 Portee : ]0,6], cadence : 20..1000 ms, seuil d'armure : 0..1,
@@ -37,7 +37,7 @@ un dechargement force. Pour une instance deja liee au dossier de compilation,
 utiliser le `lunar_control.exe` de ce meme dossier.
 
 La portee concerne la selection locale avec obstacles. Elle ne change pas la
-validation serveur. Le garde de boucle locale est une limitation du projet.
+validation serveur. Depuis 0.3.1, aucune restriction d'adresse reseau n'est imposee.
 Les quatre actions restent a valider dans un contexte de jeu admissible.
 
 ## Compilation et verification

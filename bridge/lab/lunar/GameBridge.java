@@ -85,7 +85,7 @@ public final class GameBridge implements Runnable {
     private GameBridge(Object game)throws Exception{
         mc=game;
         // These names and types are checked against actual runtime classes before activation.
-        for(String name:new String[]{"theWorld","thePlayer","currentScreen","inGameHasFocus","proxy","currentServerData","objectMouseOver","pointedEntity","playerController"})field(mc.getClass(),name);
+        for(String name:new String[]{"theWorld","thePlayer","currentScreen","inGameHasFocus","objectMouseOver","pointedEntity","playerController"})field(mc.getClass(),name);
         method(mc.getClass(),"clickMouse");
         method(cls("net.minecraft.client.multiplayer.PlayerControllerMP"),"windowClick",int.class,int.class,int.class,int.class,cls("net.minecraft.entity.player.EntityPlayer"));
         method(cls("net.minecraft.item.ItemStack"),"areItemStacksEqual",cls("net.minecraft.item.ItemStack"),cls("net.minecraft.item.ItemStack"));
@@ -105,7 +105,7 @@ public final class GameBridge implements Runnable {
             p.setProperty("repeatMillis",Integer.toString(period));p.setProperty("armorTimeoutMillis",Integer.toString(timeout));
             p.setProperty("armorThreshold",Double.toString(threshold));p.setProperty("reach",Double.toString(reach));
             p.setProperty("repeatEnabled","true");p.setProperty("armorEnabled","true");p.setProperty("selectionEnabled","true");
-            try(OutputStream out=Files.newOutputStream(config,StandardOpenOption.CREATE_NEW)){p.store(out,"Lunar Local Lab - direct loopback only; F8 toggles, F9 stops");}
+            try(OutputStream out=Files.newOutputStream(config,StandardOpenOption.CREATE_NEW)){p.store(out,"Lunar Local Lab - F8 toggles, F9 stops");}
         }
     }
     private void start(){
@@ -120,23 +120,12 @@ public final class GameBridge implements Runnable {
     }
     private void stop(){running=false;armed=false;state=stage==0?"stopped":"stopped with unresolved cursor transaction; inspect inventory";if(timer!=null)timer.shutdown();}
     private Object network()throws Exception{Object handler=call(mc,"getNetHandler");return handler==null?null:call(handler,"getNetworkManager");}
-    private boolean local(Object net)throws Exception{
-        if(net==null||get(mc,"theWorld")==null||get(mc,"thePlayer")==null||get(mc,"currentScreen")!=null||!yes(get(mc,"inGameHasFocus")))return false;
-        return localPeer(net);
-    }
-    private boolean localPeer(Object net)throws Exception{
-        if(net==null)return false;
-        if(((java.net.Proxy)get(mc,"proxy")).type()!=java.net.Proxy.Type.DIRECT)return false;
-        Object address=call(net,"getRemoteAddress");
-        if(!(address instanceof InetSocketAddress))return false;
-        InetSocketAddress peer=(InetSocketAddress)address;
-        if(peer.isUnresolved()||!peer.getAddress().isLoopbackAddress())return false;
-        Object server=get(mc,"currentServerData");if(server==null)return false;
-        String host=(String)get(server,"serverIP");
-        return host.equals("127.0.0.1")||host.equals("::1")||host.equals("[::1]")||host.matches("127\\.0\\.0\\.1:[0-9]{1,5}")||host.matches("\\[::1\\]:[0-9]{1,5}");
+    private boolean activeContext()throws Exception{
+        return get(mc,"theWorld")!=null && get(mc,"thePlayer")!=null
+            && get(mc,"currentScreen")==null && yes(get(mc,"inGameHasFocus"));
     }
     private void observeContext()throws Exception{
-        Object world=get(mc,"theWorld"),player=get(mc,"thePlayer"),net=network();boolean eligible=local(net);
+        Object world=get(mc,"theWorld"),player=get(mc,"thePlayer"),net=network();boolean eligible=activeContext();
         if(world!=previousWorld||player!=previousPlayer||net!=previousNetwork||eligible!=previousEligible){
             if(world!=previousWorld||player!=previousPlayer||net!=previousNetwork){stage=0;sourceSlot=armorSlot=original=replacement=transactionContainer=null;}
             ++generation;armed=false;if(stage!=0)state="context changed with unresolved equipment transaction";else state="context changed; disarmed";
@@ -144,7 +133,7 @@ public final class GameBridge implements Runnable {
         }
     }
     private String status()throws Exception{
-        observeContext();return "state="+state+"; running="+running+"; armed="+armed+"; world="+(get(mc,"theWorld")!=null)+"; loopbackPeer="+localPeer(network())+"; focused="+get(mc,"inGameHasFocus")+"; menu="+(get(mc,"currentScreen")!=null)+"; eligible="+previousEligible+"; ticks="+ticks+"; clicks="+clicks+"; armorConfirmedLocally="+replacements+"; equipmentStage="+stage+"; selections="+selections+"; reach="+reach;
+        observeContext();return "state="+state+"; running="+running+"; armed="+armed+"; world="+(get(mc,"theWorld")!=null)+"; networkPolicy=any; adapterVersion=0.3.1"+"; focused="+get(mc,"inGameHasFocus")+"; menu="+(get(mc,"currentScreen")!=null)+"; eligible="+previousEligible+"; ticks="+ticks+"; clicks="+clicks+"; armorConfirmedLocally="+replacements+"; equipmentStage="+stage+"; selections="+selections+"; reach="+reach;
     }
     public void run(){
         try{
@@ -183,7 +172,7 @@ public final class GameBridge implements Runnable {
                 Object oldHit=get(mc,"objectMouseOver"),oldPointed=get(mc,"pointedEntity");
                 try{
                     if(selectionEnabled)selectTarget();
-                    if(!local(network())){armed=false;return;}
+                    if(!activeContext()){armed=false;return;}
                     call(mc,"clickMouse");++clicks;
                 }finally{field(mc.getClass(),"objectMouseOver").set(mc,oldHit);field(mc.getClass(),"pointedEntity").set(mc,oldPointed);}
             }
@@ -206,7 +195,7 @@ public final class GameBridge implements Runnable {
     }
     private void clickSlot(Object slot)throws Exception{
         Object player=get(mc,"thePlayer"),container=get(player,"openContainer");
-        if(container!=transactionContainer||!local(network()))throw new IllegalStateException("equipment context changed");
+        if(container!=transactionContainer||!activeContext())throw new IllegalStateException("equipment context changed");
         method(get(mc,"playerController").getClass(),"windowClick",int.class,int.class,int.class,int.class,cls("net.minecraft.entity.player.EntityPlayer"))
             .invoke(get(mc,"playerController"),integer(get(container,"windowId")),integer(get(slot,"slotNumber")),0,0,player);
     }

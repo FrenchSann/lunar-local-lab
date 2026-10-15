@@ -21,7 +21,7 @@ contexte observé n'était pas admissible et aucun clic/équipement n'a été ex
 | Injection explicite et lecture mémoire limitée | Compilées et testées sur une JVM de test | Testées sur le processus Lunar, puis DLL déchargée |
 | Pont Forge vers JNI | JAR diagnostic compilé, chargé en JVM autonome | Chargement par Lunar non vérifié ; aucune action de jeu |
 | Résolution et adaptateur applicatif | Noms/descripteurs relevés dans la JVM | Lecture et ordonnanceur vérifiés ; compatibilité limitée à cette instance |
-| Configuration | Paramètres C++ validés et fichier properties | Chargement du fichier vérifié ; pas d'interface graphique |
+| Configuration | Paramètres C++ validés et fichier properties | Interface Win32 compilée ; validation visuelle non réalisée |
 
 ## Construire et vérifier
 
@@ -59,12 +59,8 @@ ctest --test-dir build -C Release --output-on-failure
 ## Règles du laboratoire
 
 - Après chaque changement de contexte, appeler `tick` puis réarmer explicitement avec `arm`.
-- Seuls les pairs numériques exacts `127.0.0.1` et `::1`, en connexion directe,
-  avec monde actif, fenêtre focalisée et sans menu sont éligibles. Les autres
-  adresses de boucle locale sont refusées par choix conservateur.
-- L'adaptateur vérifie le pair réseau et change sa génération lors d'une
-  reconnexion ou d'un changement de monde/joueur/éligibilité. Un nom `localhost`
-  ou une déclaration de l'utilisateur ne constitue pas cette preuve.
+- Depuis 0.3.1, les mondes solo et les serveurs distants sont admissibles. Le monde doit être actif, la fenêtre focalisée et aucun menu ouvert.
+- Une reconnexion ou un changement de monde/joueur/éligibilité désarme les modules. F8 permet de réarmer.
 - `syntheticLeft` ne déclenche pas de répétition. L'adaptateur lit le bouton
   via LWJGL et émet ses actions par appels applicatifs, sans simulation de bouton OS.
 - Les actions retournées sont des intentions consommées sur le thread applicatif.
@@ -73,8 +69,7 @@ ctest --test-dir build -C Release --output-on-failure
   cet ancien contexte. Il ne doit jamais modifier le nouveau monde. Le modèle
   ne synthétise aucun bouton système.
 
-La restriction locale est une **limitation du projet**, modifiable dans ses sources,
-pas une garantie inviolable ni une preuve que le serveur derrière un proxy est local.
+La restriction de connexion locale a été retirée à la demande de l'utilisateur en 0.3.1.
 Aucune protection n'est désactivée. Aucun mécanisme de furtivité n'est prévu.
 
 ## Lire les preuves et les limites
@@ -97,4 +92,3 @@ acceptée par un serveur. Le modèle utilise des boîtes ; l'adaptateur utilise
 ## Interface Windows
 
 L'executable natif `lunar_control.exe` permet de configurer la portee, la cadence et l'armure, puis de piloter le pont. Voir [le guide](docs/CONTROL_PANEL.md).
-

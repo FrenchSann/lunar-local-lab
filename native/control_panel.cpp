@@ -172,7 +172,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR args,int show) {
     const wchar_t* flags[]={L"Clics repetes",L"Remplacement armure",L"Selection geometrique"};
     for(int i=0;i<3;++i){checks[i]=control(L"BUTTON",flags[i],WS_TABSTOP|BS_AUTOCHECKBOX,24+i*240,310,235,26);SendMessageW(checks[i],BM_SETCHECK,BST_CHECKED,0);}
     button(L"Charger le fichier",24,353,180,10);button(L"Enregistrer",220,353,180,11);
-    control(L"STATIC",L"Appliquer : Arreter puis Installer. En jeu : F8 armer/desarmer, F9 arreter.\nConnexion directe 127.0.0.1 / ::1 requise. Fermer cette fenetre n'arrete pas le pont.",0,24,400,720,48);
+    control(L"STATIC",L"Appliquer : Arreter puis Installer. En jeu : F8 armer/desarmer, F9 arreter.\nSolo et serveurs acceptes. Fermer cette fenetre n'arrete pas le pont.",0,24,400,720,48);
     output=control(L"EDIT",L"Pret. Choisissez le PID et verifiez le chemin. Installer charge le pont JNI dans cette instance.",ES_MULTILINE|ES_READONLY|WS_VSCROLL,24,465,716,115);
     ShowWindow(window,show);UpdateWindow(window);
     MSG message{};while(GetMessageW(&message,nullptr,0,0)>0){if(!IsDialogMessageW(window,&message)){TranslateMessage(&message);DispatchMessageW(&message);}}

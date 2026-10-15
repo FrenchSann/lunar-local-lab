@@ -1,13 +1,14 @@
-param([string]$Jdk = $env:JAVA_HOME)
+param([string]$Jdk = $env:JAVA_HOME, [string]$BuildDirectory)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
+if (!$BuildDirectory) { $BuildDirectory = Join-Path $repo 'build' }
 if (!$Jdk) { throw 'JDK required.' }
-& "$Jdk\bin\javac.exe" --release 8 -d "$repo\build\java" "$repo\jni\lab\ProbeHost.java"
+& "$Jdk\bin\javac.exe" --release 8 -d "$BuildDirectory\java" "$repo\jni\lab\ProbeHost.java"
 if ($LASTEXITCODE -ne 0) { throw 'Host compilation failed.' }
 $info = [Diagnostics.ProcessStartInfo]::new()
 $info.FileName = "$Jdk\bin\java.exe"
 $info.ArgumentList.Add('-cp')
-$info.ArgumentList.Add("$repo\build\java")
+$info.ArgumentList.Add("$BuildDirectory\java")
 $info.ArgumentList.Add('lab.ProbeHost')
 $info.UseShellExecute = $false
 $info.CreateNoWindow = $true
@@ -16,7 +17,7 @@ $hostProcess = [Diagnostics.Process]::Start($info)
 try {
     $ready = $hostProcess.StandardOutput.ReadLineAsync()
     if (!$ready.Wait(10000) -or $ready.Result -ne 'Diagnostic host ready') { throw 'Owned test JVM did not become ready.' }
-    $inspector = Join-Path $repo 'build\Release\inspect_process.exe'
+    $inspector = Join-Path $BuildDirectory 'Release\inspect_process.exe'
     & $inspector $hostProcess.Id --read-header
     if ($LASTEXITCODE -ne 0) { throw 'External read failed.' }
     & $inspector $hostProcess.Id --inject-diagnostic

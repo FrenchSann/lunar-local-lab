@@ -12,8 +12,8 @@ void Configuration::validate() const {
         throw std::invalid_argument("Invalid lab configuration");
 }
 bool Context::eligible() const {
-    // Deliberately conservative subset of numeric loopback addresses. No DNS.
-    return direct && world && focused && !menu && (peer == "127.0.0.1" || peer == "::1");
+    // Network identity still participates in context changes, but is not an activation gate.
+    return world && focused && !menu;
 }
 bool Armor::usable() const { return id > 0 && slot >= 0 && slot < 4 && maximum > 0 && remaining > 0 && remaining <= maximum && protection >= 0 && attributes >= 0; }
 double Armor::fraction() const { return maximum > 0 ? static_cast<double>(remaining) / maximum : 0; }

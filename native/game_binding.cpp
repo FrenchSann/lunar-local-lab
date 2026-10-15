@@ -22,7 +22,7 @@ jint JNICALL plan(JNIEnv*, jclass, jlong generation, jlong now, jboolean eligibl
             lunar::Configuration config; config.repeat = lunar::Millis{period};
             engine = std::make_unique<lunar::ActionCoordinator>(config); configuredPeriod = period;
         }
-        lunar::Snapshot s; s.context = {static_cast<std::uint64_t>(generation), "127.0.0.1", eligible != 0, eligible != 0, eligible != 0, false};
+        lunar::Snapshot s; s.context = {static_cast<std::uint64_t>(generation), "", false, eligible != 0, eligible != 0, false};
         s.captured = lunar::Time{lunar::Millis{now}}; s.physicalLeft = physical != 0; s.block = block != 0;
         auto actions = engine->tick(s);
         if (!eligible || !armed) return 0;

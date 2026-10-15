@@ -17,7 +17,7 @@ struct Configuration {
     double armorThreshold{0.15}, reach{3.0};
     void validate() const;
 };
-// Endpoint must be the observed peer, never an unverified hostname or UI label.
+// Optional observed network identity for context invalidation, not an activation restriction.
 struct Context {
     std::uint64_t generation{};
     std::string peer;
