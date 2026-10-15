@@ -127,6 +127,6 @@ std::optional<Selection> selectTarget(Vec3 eye, Vec3 direction, double reach,
 }
 bool NativeRuntime::enter() { std::lock_guard lock(mutex_); if (stopping_) return false; ++active_; return true; }
 void NativeRuntime::leave() { std::lock_guard lock(mutex_); if (!active_) std::terminate(); if (--active_ == 0) cv_.notify_all(); }
-void NativeRuntime::requestStop() { std::lock_guard lock(mutex_); stopping_ = true; }
+void NativeRuntime::requestStop() { std::lock_guard lock(mutex_); stopping_ = true; cv_.notify_all(); }
 void NativeRuntime::waitQuiescent() { std::unique_lock lock(mutex_); cv_.wait(lock, [&] { return stopping_ && active_ == 0; }); }
 }

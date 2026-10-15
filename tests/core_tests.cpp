@@ -99,6 +99,10 @@ void runtimeTest() {
     auto waiter = std::async(std::launch::async,[&] { r.waitQuiescent(); });
     const auto state = waiter.wait_for(Millis{20}); release.set_value(); worker.get(); waiter.get();
     CHECK(state == std::future_status::timeout); CHECK(!r.enter()); r.requestStop(); r.waitQuiescent();
+    NativeRuntime empty;
+    auto earlyWaiter = std::async(std::launch::async,[&] { empty.waitQuiescent(); });
+    CHECK(earlyWaiter.wait_for(Millis{20}) == std::future_status::timeout);
+    empty.requestStop(); earlyWaiter.get();
 }
 int main(int argc, char** argv) {
     try {

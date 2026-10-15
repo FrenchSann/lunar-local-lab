@@ -15,4 +15,18 @@ add_executable(core_tests tests/core_tests.cpp)
 target_link_libraries(core_tests PRIVATE lunar_core)
 foreach(case context scheduler armor geometry runtime)
   add_test(NAME ${case} COMMAND core_tests ${case})
+  set_tests_properties(${case} PROPERTIES TIMEOUT 15)
 endforeach()
+option(LUNAR_LAB_JNI_PROBE "Build the standalone JVM diagnostic (not Lunar integration)" OFF)
+if(LUNAR_LAB_JNI_PROBE)
+  find_package(JNI REQUIRED)
+  find_package(Java REQUIRED COMPONENTS Development Runtime)
+  add_library(jni_probe SHARED jni/probe.cpp)
+  target_include_directories(jni_probe PRIVATE ${JNI_INCLUDE_DIRS})
+  add_custom_target(java_probe ALL
+    COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_BINARY_DIR}/java ${CMAKE_CURRENT_SOURCE_DIR}/jni/lab/Probe.java
+    DEPENDS jni/lab/Probe.java VERBATIM)
+  add_test(NAME jni_standalone COMMAND ${Java_JAVA_EXECUTABLE} -Xcheck:jni
+    -cp ${CMAKE_BINARY_DIR}/java lab.Probe $<TARGET_FILE:jni_probe>)
+  set_tests_properties(jni_standalone PROPERTIES TIMEOUT 30)
+endif()
