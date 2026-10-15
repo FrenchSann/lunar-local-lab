@@ -1,0 +1,11 @@
+[
+  {
+    "modid": "lunarlocaldiagnostic",
+    "name": "Lunar Local Lab - Diagnostic only",
+    "description": "Explicit Lunar Client 1.8.9 educational JNI diagnostic. No gameplay automation is integrated or enabled.",
+    "version": "0.2.0",
+    "mcversion": "1.8.9",
+    "authorList": ["Lunar Local Lab"],
+    "url": "https://github.com/FrenchSann/lunar-local-lab"
+  }
+]

@@ -5,3 +5,4 @@
 *.pdb
 *.class
 /.vs/
+/dist/

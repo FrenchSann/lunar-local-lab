@@ -21,10 +21,15 @@ option(LUNAR_LAB_JNI_PROBE "Build the standalone JVM diagnostic (not Lunar integ
 if(LUNAR_LAB_JNI_PROBE)
   find_package(JNI REQUIRED)
   find_package(Java REQUIRED COMPONENTS Development Runtime)
+  if(Java_VERSION VERSION_LESS 9)
+    set(JAVA_COMPAT_FLAGS -source 1.8 -target 1.8)
+  else()
+    set(JAVA_COMPAT_FLAGS --release 8)
+  endif()
   add_library(jni_probe SHARED jni/probe.cpp)
   target_include_directories(jni_probe PRIVATE ${JNI_INCLUDE_DIRS})
   add_custom_target(java_probe ALL
-    COMMAND ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_BINARY_DIR}/java ${CMAKE_CURRENT_SOURCE_DIR}/jni/lab/Probe.java
+    COMMAND ${Java_JAVAC_EXECUTABLE} ${JAVA_COMPAT_FLAGS} -d ${CMAKE_BINARY_DIR}/java ${CMAKE_CURRENT_SOURCE_DIR}/jni/lab/Probe.java
     DEPENDS jni/lab/Probe.java VERBATIM)
   add_test(NAME jni_standalone COMMAND ${Java_JAVA_EXECUTABLE} -Xcheck:jni
     -cp ${CMAKE_BINARY_DIR}/java lab.Probe $<TARGET_FILE:jni_probe>)
