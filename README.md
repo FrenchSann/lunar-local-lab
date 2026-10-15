@@ -4,24 +4,24 @@
 
 Un cœur déterministe pour étudier quatre comportements : répétition sous maintien
 physique, maintien du minage, remplacement d'armure et sélection géométrique.
-Les simulations sont exécutables. **Aucune fonction n'est intégrée au client Lunar.**
-Un **diagnostic natif injecté a été exécuté dans le processus Lunar**, sans Forge :
-lecture des en-têtes de la JVM, interrogation JNI, puis déchargement vérifié.
-Cette étape n'intègre pas encore les quatre fonctions de jeu.
+Le cœur simulé est maintenant raccordé à un **adaptateur Minecraft réel**, sans
+Forge. La lecture d'état sur le thread du jeu, l'ordonnanceur et l'arrêt ont été
+vérifiés dans Lunar. **Les quatre parcours actifs restent à valider en jeu** : le
+contexte observé n'était pas admissible et aucun clic/équipement n'a été exécuté.
 
 | Capacité | État du livrable | Dans Lunar |
 |---|---|---|
-| Répétition à horloge monotone, sans rattrapage | Implémentée et testée en simulation | Bloquée |
-| Maintien contextuel prioritaire sur bloc | Implémenté et testé en simulation | Bloqué |
-| Armure : choix, préconditions, réservation, confirmation, expiration | Implémenté et testé dans le modèle simplifié | Bloqué |
-| Segment/boîte, distance d'entrée, obstacles, portée | Implémenté et testé localement | Bloqué ; aucune validation serveur |
-| Désarmement lors d'un changement de contexte | Implémenté et testé sur instantanés simulés | Observation réseau réelle manquante |
+| Répétition à horloge monotone, sans rattrapage | Testée en simulation | Appel réel raccordé ; essai actif non réalisé |
+| Maintien contextuel prioritaire sur bloc | Testé en simulation | Préservation du maintien natif implémentée ; essai non réalisé |
+| Armure : choix, préconditions, réservation, confirmation, expiration | Testée dans le modèle simplifié | Transaction réelle implémentée, confirmation locale seulement ; essai non réalisé |
+| Segment/boîte, distance d'entrée, obstacles, portée | Testé localement | Boîtes et raytrace du jeu raccordés ; essai non réalisé |
+| Désarmement et restrictions de contexte | Testés sur instantanés simulés | Lecture réelle et refus d'armement vérifiés |
 | Arrêt et barrière de rappels | Testés pour les rappels enregistrés du laboratoire | Déchargement d'un module Lunar non testé |
 | JNI : version et attachement/détachement | Diagnostic autonome et diagnostic natif | Testé dans le processus Lunar ; résolution des classes de jeu non vérifiée |
 | Injection explicite et lecture mémoire limitée | Compilées et testées sur une JVM de test | Testées sur le processus Lunar, puis DLL déchargée |
 | Pont Forge vers JNI | JAR diagnostic compilé, chargé en JVM autonome | Chargement par Lunar non vérifié ; aucune action de jeu |
-| Mappings et adaptateur applicatif | Non implémentés faute de correspondances vérifiées | Bloqués |
-| Configuration | Paramètres C++ validés | Fichiers de profils et UI non implémentés |
+| Résolution et adaptateur applicatif | Noms/descripteurs relevés dans la JVM | Lecture et ordonnanceur vérifiés ; compatibilité limitée à cette instance |
+| Configuration | Paramètres C++ validés et fichier properties | Chargement du fichier vérifié ; pas d'interface graphique |
 
 ## Construire et vérifier
 
@@ -62,13 +62,13 @@ ctest --test-dir build -C Release --output-on-failure
 - Seuls les pairs numériques exacts `127.0.0.1` et `::1`, en connexion directe,
   avec monde actif, fenêtre focalisée et sans menu sont éligibles. Les autres
   adresses de boucle locale sont refusées par choix conservateur.
-- Le futur adaptateur devra fournir le pair réseau observé et une génération
-  changée à chaque reconnexion, monde, joueur ou session. Un nom `localhost`
+- L'adaptateur vérifie le pair réseau et change sa génération lors d'une
+  reconnexion ou d'un changement de monde/joueur/éligibilité. Un nom `localhost`
   ou une déclaration de l'utilisateur ne constitue pas cette preuve.
-- `syntheticLeft` ne déclenche pas de répétition. L'entrée physique devra provenir
-  d'une source distincte vérifiée, aujourd'hui absente.
-- Les actions retournées sont des intentions à usage unique : l'adaptateur devra
-  les revalider et les consommer sur le thread applicatif, sans file persistante.
+- `syntheticLeft` ne déclenche pas de répétition. L'adaptateur lit le bouton
+  via LWJGL et émet ses actions par appels applicatifs, sans simulation de bouton OS.
+- Les actions retournées sont des intentions consommées sur le thread applicatif.
+  Le pair et le contexte sont vérifiés de nouveau avant l'appel de clic/inventaire.
 - Un `EndMining` d'ancien contexte libère uniquement la réservation possédée de
   cet ancien contexte. Il ne doit jamais modifier le nouveau monde. Le modèle
   ne synthétise aucun bouton système.
@@ -84,12 +84,12 @@ Aucune protection n'est désactivée. Aucun mécanisme de furtivité n'est prév
 - [Résultats réellement obtenus](docs/TEST_RESULTS.md)
 - [Construire et charger le diagnostic Forge](docs/FORGE_DIAGNOSTIC.md)
 - [Diagnostic natif injecté sans Forge : résultats et commandes](docs/PROCESS_DIAGNOSTIC.md)
+- **[Adaptateur Minecraft réel : activation, configuration et limites](docs/GAME_ADAPTER.md)**
 
-Le classement d'armure compare protection, score d'attributs fourni par le modèle,
+Le classement d'armure compare protection, score heuristique d'attributs,
 durabilité relative puis absolue, et identifiant stable. Ce n'est pas un calcul
-validé des dégâts ou enchantements Minecraft. Le protocole d'inventaire réel,
-les identifiants d'objets et la confirmation serveur restent à établir.
+validé des dégâts Minecraft. La confirmation serveur n'est pas observée directement.
 
 La portée contrôle une sélection géométrique locale ; elle n'augmente pas la portée
-acceptée par un serveur. Les obstacles sont des boîtes fournies par le modèle,
-sans lecture réelle des formes de collision Minecraft.
+acceptée par un serveur. Le modèle utilise des boîtes ; l'adaptateur utilise
+également le raytrace de blocs du jeu pour limiter la visibilité.

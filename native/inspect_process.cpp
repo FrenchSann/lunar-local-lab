@@ -178,7 +178,8 @@ int wmain(int argc, wchar_t** argv) {
         }
         std::cout << "Injected diagnostic completed: VM count=" << report.vmCount << ", JNI=0x" << std::hex << report.jniVersion
             << ", MZ=0x" << report.dosSignature << ", PE=0x" << report.peSignature << std::dec
-            << ", attachedHere=" << report.attachedHere << ", detached=" << report.detached << ". DLL unloaded after thread completion.\n";
+            << ", attachedHere=" << report.attachedHere << ", detached=" << report.detached
+            << (resident ? ". Existing resident bridge retained.\n" : ". DLL unloaded after thread completion.\n");
         return 0;
     } catch (const std::exception& e) { std::cerr << e.what() << '\n'; return 1; }
 }

@@ -80,3 +80,24 @@ octets de classes la JVM a effectivement chargés.
 Le blocage « aucun chargement disponible » est levé pour le diagnostic natif.
 Le blocage sur les objets de jeu, mappings, thread applicatif et quatre capacités
 reste ouvert. Voir [le rapport d'exécution](PROCESS_DIAGNOSTIC.md).
+
+## Quatrième passe : classes nommées et adaptateur applicatif
+
+Le fichier `lunar-platform-mappings-v1_8.jar` est maintenant présent et contient
+des entrées `.kin`, notamment `lunar/lunar_named_b5_1.8.9.kin`. Il n'a pas été
+appliqué comme table d'offsets ni distribué. L'inventaire JVMTI de la JVM active
+expose directement les classes nommées `net/minecraft/...` : les signatures
+réellement chargées ont servi à valider les accès.
+
+Les signatures vérifiées incluent `Minecraft.getMinecraft`, `addScheduledTask`
+(Callable et Runnable), `isCallingFromMinecraftThread`, `clickMouse`,
+`PlayerControllerMP.windowClick`, `NetworkManager.getRemoteAddress`,
+`ItemStack.areItemStacksEqual`, les slots et les boîtes des entités.
+La lecture d'état et l'ordonnancement dans Minecraft ont réussi. Le premier état
+lu indiquait monde présent, menu ouvert, absence de focus et pair non reconnu
+comme boucle locale. L'armement a été refusé sans action de jeu.
+
+L'adaptateur est implémenté pour les noms/descripteurs observés dans cette instance,
+mais la build commerciale exacte n'est toujours pas attestée. Les quatre actions
+actives demandent encore une validation en jeu. Le chargement des mêmes noms dans
+une autre build ne prouve pas à lui seul des comportements identiques.

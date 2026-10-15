@@ -7,9 +7,16 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
       - name: Configure
-        run: cmake --preset windows-msvc
+        run: cmake --preset windows-msvc -DLUNAR_LAB_JNI_PROBE=ON -DLUNAR_LAB_PROCESS_DIAGNOSTIC=ON
       - name: Build
         run: cmake --build --preset release
       - name: Test
         run: ctest --preset release -V
+      - name: Test owned JVM process diagnostics
+        shell: pwsh
+        run: ./scripts/Test-ProcessDiagnostic.ps1 -Jdk $env:JAVA_HOME

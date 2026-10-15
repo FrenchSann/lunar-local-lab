@@ -1,5 +1,9 @@
 # Architecture et frontières vérifiables
 
+Ce document décrit le premier cœur simulé. L'état actuel de l'intégration,
+les composants ajoutés et les limites applicatives figurent dans
+[GAME_ADAPTER.md](GAME_ADAPTER.md).
+
 ```mermaid
 flowchart LR
   S[Instantané simulé] --> C[ActionCoordinator]

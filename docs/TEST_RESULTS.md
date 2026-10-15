@@ -85,3 +85,21 @@ Après l'opération, processus vivant et répondant selon Windows.
 Les six suites CTest existantes ont ensuite été réexécutées : **6/6 réussies,
 0 échec**, durée observée **1,75 s**. Les cas timeout/refus d'accès/architecture
 incompatible ne sont pas couverts par un essai réel dans cette passe.
+
+## Quatrième passe : adaptateur de jeu
+
+Compilation C++ et bytecode de l'adaptateur Java réussie. Tests de processus
+réexécutés avec une recherche exacte de la méthode `main` du processus de test
+via JVMTI et refus du pont de jeu dans une JVM qui ne contient pas Minecraft.
+Les six suites CTest ont réussi : 0 échec, durée observée 0,81 s avant le dernier
+ajustement de réflexion Java. Cet ajustement a ensuite été recompilé et le test
+de processus réexécuté avec succès.
+
+Dans Lunar PID 12836 : résolution de l'adaptateur et lecture sur le thread de jeu,
+plus de 800 callbacks désarmés, arrêt à 830 passages, puis état stable à 830.
+Après réinstallation, armement refusé dans un contexte `loopbackPeer=false`,
+`focused=false`, `menu=true`, avec compteurs d'actions nuls.
+
+Ces essais ne valident pas encore les clics réels, une transaction d'armure complète,
+les collisions pendant une attaque ou le comportement du serveur. La CI a été
+étendue à la compilation JNI et aux diagnostics dans une JVM de test personnelle.
