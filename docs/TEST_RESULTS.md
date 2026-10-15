@@ -68,3 +68,20 @@ d'une copie de test corrompue avant `System.load`.
 SHA-256 du JAR diagnostic produit lors de cette passe :
 `7e7d1d346c2ef6dcfb6d5a94bc44d871505ed1268e9854bb49f010c3fea250e5`.
 Un nouveau packaging peut changer ce SHA-256, notamment à cause des horodatages ZIP.
+
+## Troisième passe : injection et lecture mémoire
+
+Compilation x64 Release de `inspect_process.exe` et `lunar_memory_probe.dll` réussie.
+`Test-ProcessDiagnostic.ps1` a réussi sur une JVM Java 21.0.6 créée pour le test :
+lecture mémoire externe, deux cycles chargement/diagnostic/déchargement et refus
+d'un processus non Java. Seul le processus de test créé par le script est arrêté
+à la fin ; l'instance Lunar n'est pas arrêtée.
+
+Un cycle a ensuite réussi sur le processus Lunar PID 12836, Zulu 17.0.18 x64.
+Une JVM détectée, JNI `0xa0000`, signatures MZ `0x5a4d` et PE `0x4550`,
+thread attaché puis détaché et absence de la DLL après déchargement vérifiées.
+Après l'opération, processus vivant et répondant selon Windows.
+
+Les six suites CTest existantes ont ensuite été réexécutées : **6/6 réussies,
+0 échec**, durée observée **1,75 s**. Les cas timeout/refus d'accès/architecture
+incompatible ne sont pas couverts par un essai réel dans cette passe.

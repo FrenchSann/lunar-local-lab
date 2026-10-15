@@ -5,6 +5,9 @@
 Un cœur déterministe pour étudier quatre comportements : répétition sous maintien
 physique, maintien du minage, remplacement d'armure et sélection géométrique.
 Les simulations sont exécutables. **Aucune fonction n'est intégrée au client Lunar.**
+Un **diagnostic natif injecté a été exécuté dans le processus Lunar**, sans Forge :
+lecture des en-têtes de la JVM, interrogation JNI, puis déchargement vérifié.
+Cette étape n'intègre pas encore les quatre fonctions de jeu.
 
 | Capacité | État du livrable | Dans Lunar |
 |---|---|---|
@@ -14,7 +17,8 @@ Les simulations sont exécutables. **Aucune fonction n'est intégrée au client 
 | Segment/boîte, distance d'entrée, obstacles, portée | Implémenté et testé localement | Bloqué ; aucune validation serveur |
 | Désarmement lors d'un changement de contexte | Implémenté et testé sur instantanés simulés | Observation réseau réelle manquante |
 | Arrêt et barrière de rappels | Testés pour les rappels enregistrés du laboratoire | Déchargement d'un module Lunar non testé |
-| JNI : attachement, chargeur, références, exception attendue | Diagnostic autonome ; voir résultats | Bloqué dans Lunar |
+| JNI : version et attachement/détachement | Diagnostic autonome et diagnostic natif | Testé dans le processus Lunar ; résolution des classes de jeu non vérifiée |
+| Injection explicite et lecture mémoire limitée | Compilées et testées sur une JVM de test | Testées sur le processus Lunar, puis DLL déchargée |
 | Pont Forge vers JNI | JAR diagnostic compilé, chargé en JVM autonome | Chargement par Lunar non vérifié ; aucune action de jeu |
 | Mappings et adaptateur applicatif | Non implémentés faute de correspondances vérifiées | Bloqués |
 | Configuration | Paramètres C++ validés | Fichiers de profils et UI non implémentés |
@@ -79,6 +83,7 @@ Aucune protection n'est désactivée. Aucun mécanisme de furtivité n'est prév
 - [Architecture et contrats d'intégration](docs/ARCHITECTURE.md)
 - [Résultats réellement obtenus](docs/TEST_RESULTS.md)
 - [Construire et charger le diagnostic Forge](docs/FORGE_DIAGNOSTIC.md)
+- [Diagnostic natif injecté sans Forge : résultats et commandes](docs/PROCESS_DIAGNOSTIC.md)
 
 Le classement d'armure compare protection, score d'attributs fourni par le modèle,
 durabilité relative puis absolue, et identifiant stable. Ce n'est pas un calcul

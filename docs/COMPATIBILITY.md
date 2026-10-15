@@ -63,3 +63,20 @@ Forge 1.8.9. L'installation et le chargement dans Lunar restent non vérifiés.
 
 `scripts/Inspect-Lunar.ps1` permet de refaire un diagnostic limité sans afficher
 les arguments de processus ou les fichiers de session.
+
+## Troisième passe : processus actif et diagnostic injecté
+
+Après nouvelle autorisation explicite de l'utilisateur, le diagnostic natif a été
+compilé puis injecté avec succès dans le processus Lunar `javaw` PID 12836.
+Le runtime observé est maintenant Zulu **17.0.18 x64**, distinct des anciens JRE
+présents sur disque. Les en-têtes de `jvm.dll` ont réellement été lus avec
+ReadProcessMemory et l'API JNI interrogée dans ce processus.
+
+L'empreinte SHA-1 du fichier `offline/multiver/lunar.jar` observé à cette passe est
+`c98eaedfee35eaa86b1a6bdd09c3c4b6251b57fc`. Elle diffère encore de la référence
+a397868. Cette empreinte du fichier sur disque ne prouve pas à elle seule quels
+octets de classes la JVM a effectivement chargés.
+
+Le blocage « aucun chargement disponible » est levé pour le diagnostic natif.
+Le blocage sur les objets de jeu, mappings, thread applicatif et quatre capacités
+reste ouvert. Voir [le rapport d'exécution](PROCESS_DIAGNOSTIC.md).
