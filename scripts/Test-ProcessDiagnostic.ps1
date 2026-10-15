@@ -23,8 +23,12 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Injection diagnostic failed.' }
     & $inspector $hostProcess.Id --inject-diagnostic
     if ($LASTEXITCODE -ne 0) { throw 'Second injection after verified unload failed.' }
+    $metadata = & $inspector $hostProcess.Id --class-metadata 'Llab/ProbeHost;'
+    if ($LASTEXITCODE -ne 0 -or ($metadata -join "`n") -notmatch 'METHOD 9 main \(\[Ljava/lang/String;\)V') { throw 'Live metadata did not identify the test main method.' }
     $rejected = & $inspector $PID --read-header 2>&1
     if ($LASTEXITCODE -eq 0 -or ($rejected -join "`n") -notmatch 'Target is not a Java executable') { throw 'Non-Java target was not rejected.' }
+    $notMinecraft = & $inspector $hostProcess.Id --game-control status 2>&1
+    if ($LASTEXITCODE -eq 0 -or ($notMinecraft -join "`n") -notmatch 'Minecraft class not found') { throw 'Non-Minecraft JVM was not rejected by the game bridge.' }
     Write-Output 'Process diagnostic tests passed: external read, two load/probe/unload cycles, non-Java rejection.'
     $global:LASTEXITCODE = 0
 } finally {

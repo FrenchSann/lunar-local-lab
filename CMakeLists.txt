@@ -16,7 +16,17 @@ if(LUNAR_LAB_PROCESS_DIAGNOSTIC)
     message(FATAL_ERROR "Process diagnostic requires Windows x64")
   endif()
   find_package(JNI REQUIRED)
-  add_library(lunar_memory_probe SHARED native/memory_probe.cpp)
+  find_package(Java REQUIRED COMPONENTS Development)
+  find_program(POWERSHELL_EXECUTABLE NAMES pwsh REQUIRED)
+  file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/generated)
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/generated/game_bridge_bytes.hpp
+    COMMAND ${Java_JAVAC_EXECUTABLE} --release 8 -d ${CMAKE_BINARY_DIR}/generated/java ${CMAKE_CURRENT_SOURCE_DIR}/bridge/lab/lunar/GameBridge.java
+    COMMAND ${POWERSHELL_EXECUTABLE} -NoProfile -File ${CMAKE_CURRENT_SOURCE_DIR}/scripts/Embed-Class.ps1
+      -InputClass ${CMAKE_BINARY_DIR}/generated/java/lab/lunar/GameBridge.class -OutputHeader ${CMAKE_BINARY_DIR}/generated/game_bridge_bytes.hpp
+    DEPENDS bridge/lab/lunar/GameBridge.java scripts/Embed-Class.ps1 VERBATIM)
+  add_library(lunar_memory_probe SHARED native/memory_probe.cpp native/class_metadata.cpp native/game_binding.cpp ${CMAKE_BINARY_DIR}/generated/game_bridge_bytes.hpp)
+  target_link_libraries(lunar_memory_probe PRIVATE lunar_core)
+  target_include_directories(lunar_memory_probe PRIVATE ${CMAKE_BINARY_DIR}/generated)
   target_include_directories(lunar_memory_probe PRIVATE ${JNI_INCLUDE_DIRS})
   add_executable(inspect_process native/inspect_process.cpp)
   add_dependencies(inspect_process lunar_memory_probe)

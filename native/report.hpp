@@ -13,3 +13,8 @@ struct ProbeReport {
 };
 static_assert(sizeof(ProbeReport) == 36);
 constexpr std::uint32_t reportMagic = 0x4C4C4142;
+struct MetadataReport {
+    std::uint32_t magic, status, matches, truncated;
+    char query[512]; // Empty: game class inventory. Otherwise exact JVM signature.
+    char text[131072]; // Class/member names and descriptors only; never field values.
+};

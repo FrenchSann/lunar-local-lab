@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <memory>
 #include "report.hpp"
 
 namespace {
@@ -88,13 +89,17 @@ DWORD invoke(HANDLE process, LPTHREAD_START_ROUTINE function, void* parameter, R
 }
 int wmain(int argc, wchar_t** argv) {
     try {
-        if (argc != 3 || (std::wstring(argv[2]) != L"--read-header" && std::wstring(argv[2]) != L"--inject-diagnostic"))
-            throw std::runtime_error("Usage: inspect_process PID --read-header|--inject-diagnostic");
+        if (argc < 3 || argc > 4 || (std::wstring(argv[2]) != L"--read-header" && std::wstring(argv[2]) != L"--inject-diagnostic" && std::wstring(argv[2]) != L"--class-metadata" && std::wstring(argv[2]) != L"--game-control"))
+            throw std::runtime_error("Usage: inspect_process PID --read-header|--inject-diagnostic|--class-metadata [signature]|--game-control install|status|arm|stop");
+        const bool game = std::wstring(argv[2]) == L"--game-control";
+        const bool metadata = game || std::wstring(argv[2]) == L"--class-metadata";
+        if (game && argc != 4) throw std::runtime_error("Game operation required");
+        if (argc == 4 && !metadata) throw std::runtime_error("Unexpected argument");
         static_assert(sizeof(void*) == 8, "Build x64 only");
         size_t consumed = 0; const auto parsed = std::stoul(argv[1], &consumed);
         if (!parsed || consumed != std::wstring(argv[1]).size()) throw std::runtime_error("Invalid PID");
         const auto pid = static_cast<DWORD>(parsed);
-        const bool inject = std::wstring(argv[2]) == L"--inject-diagnostic";
+        const bool inject = std::wstring(argv[2]) != L"--read-header";
         DWORD access = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
         if (inject) access |= PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION | PROCESS_VM_WRITE;
         Handle process(OpenProcess(access, FALSE, pid));
@@ -114,13 +119,17 @@ int wmain(int argc, wchar_t** argv) {
         wchar_t self[32768]{};
         if (!GetModuleFileNameW(nullptr, self, 32768)) fail("Inspector path");
         const auto dll = std::filesystem::canonical(std::filesystem::path(self).parent_path() / L"lunar_memory_probe.dll");
-        for (const auto& m : modules(pid)) if (_wcsicmp(m.szModule, L"lunar_memory_probe.dll") == 0) throw std::runtime_error("Probe already loaded; refusing duplicate injection");
+        bool resident = false;
+        for (const auto& m : modules(pid)) if (_wcsicmp(m.szModule, L"lunar_memory_probe.dll") == 0) {
+            if (_wcsicmp(m.szExePath,dll.c_str()) != 0) throw std::runtime_error("Different probe build is already resident");
+            resident = true;
+        }
         const auto load = remoteSystemExport(process.value, pid, "LoadLibraryW");
         const auto unload = remoteSystemExport(process.value, pid, "FreeLibrary");
         // Inspect the built library's export without running its initialization locally.
         auto local = LoadLibraryExW(dll.c_str(), nullptr, DONT_RESOLVE_DLL_REFERENCES);
         if (!local) fail("Inspect probe exports");
-        auto entry = GetProcAddress(local, "LunarReadOnlyProbe");
+        auto entry = GetProcAddress(local, game ? "LunarGameControl" : metadata ? "LunarClassMetadata" : "LunarReadOnlyProbe");
         if (!entry) { FreeLibrary(local); throw std::runtime_error("Missing diagnostic export"); }
         const auto localHeader = peHeader(GetCurrentProcess(), reinterpret_cast<BYTE*>(local));
         const auto offset = reinterpret_cast<std::uintptr_t>(entry) - reinterpret_cast<std::uintptr_t>(local);
@@ -128,20 +137,45 @@ int wmain(int argc, wchar_t** argv) {
         RemoteBuffer path(process.value, (dll.wstring().size() + 1) * sizeof(wchar_t));
         SIZE_T copied = 0; const auto bytes = (dll.wstring().size() + 1) * sizeof(wchar_t);
         if (!WriteProcessMemory(process.value, path.address, dll.c_str(), bytes, &copied) || copied != bytes) fail("Write diagnostic library path");
-        invoke(process.value, load, path.address, &path);
+        if (!resident) invoke(process.value, load, path.address, &path);
         const auto remote = findModule(pid, L"lunar_memory_probe.dll");
         const auto remoteHeader = peHeader(process.value, remote.modBaseAddr);
         if (_wcsicmp(remote.szExePath, dll.c_str()) != 0 || offset >= remote.modBaseSize ||
             remoteHeader.FileHeader.TimeDateStamp != localHeader.FileHeader.TimeDateStamp ||
             remoteHeader.OptionalHeader.SizeOfImage != localHeader.OptionalHeader.SizeOfImage)
             throw std::runtime_error("Loaded library identity mismatch; retained, no export called");
-        RemoteBuffer result(process.value, sizeof(ProbeReport));
+        RemoteBuffer result(process.value, metadata ? sizeof(MetadataReport) : sizeof(ProbeReport));
+        auto meta = std::make_unique<MetadataReport>();
+        if (metadata) {
+            if (argc == 4) {
+                const std::wstring query = argv[3];
+                if (query.size() >= sizeof(meta->query)) throw std::runtime_error("Query too long");
+                for (size_t i = 0; i < query.size(); ++i) {
+                    if (query[i] < 32 || query[i] > 126) throw std::runtime_error("ASCII class signature required");
+                    meta->query[i] = static_cast<char>(query[i]);
+                }
+            }
+            if (!WriteProcessMemory(process.value, result.address, meta.get(), sizeof(*meta), &copied) || copied != sizeof(*meta)) fail("Write metadata request");
+        }
         const auto status = invoke(process.value, reinterpret_cast<LPTHREAD_START_ROUTINE>(remote.modBaseAddr + offset), result.address, &result);
         const auto report = read<ProbeReport>(process.value, result.address);
+        if (metadata && (!ReadProcessMemory(process.value, result.address, meta.get(), sizeof(*meta), &copied) || copied != sizeof(*meta))) fail("Read metadata");
         // The export has returned, owns no callbacks and created no worker threads.
-        if (!invoke(process.value, unload, remote.modBaseAddr)) throw std::runtime_error("FreeLibrary failed");
-        for (const auto& m : modules(pid)) if (_wcsicmp(m.szModule, L"lunar_memory_probe.dll") == 0) throw std::runtime_error("Probe still resident after release");
+        if (!game && !resident) {
+            if (!invoke(process.value, unload, remote.modBaseAddr)) throw std::runtime_error("FreeLibrary failed");
+            for (const auto& m : modules(pid)) if (_wcsicmp(m.szModule, L"lunar_memory_probe.dll") == 0) throw std::runtime_error("Probe still resident after release");
+        }
+        if (game) {
+            meta->text[sizeof(meta->text)-1] = 0;
+            std::cout << meta->text << "\nNative bridge remains resident until JVM exit.\n";
+        }
         if (status || report.magic != reportMagic || report.status) throw std::runtime_error("Diagnostic failed, status=" + std::to_string(report.status));
+        if (metadata) {
+            if(game)return 0;
+            meta->text[sizeof(meta->text)-1] = 0;
+            std::cout << "Matches=" << meta->matches << ", truncated=" << meta->truncated << '\n' << meta->text;
+            return meta->truncated ? 2 : 0;
+        }
         std::cout << "Injected diagnostic completed: VM count=" << report.vmCount << ", JNI=0x" << std::hex << report.jniVersion
             << ", MZ=0x" << report.dosSignature << ", PE=0x" << report.peSignature << std::dec
             << ", attachedHere=" << report.attachedHere << ", detached=" << report.detached << ". DLL unloaded after thread completion.\n";
