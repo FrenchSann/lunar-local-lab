@@ -41,3 +41,25 @@ modification de protection, furtivité ou recherche de contournement n'est réal
 Les journaux bruts, identifiants de session, fichiers client et binaires propriétaires
 ne sont pas copiés dans ce dépôt. L'absence d'un mécanisme vérifié bloque l'intégration,
 pas les simulations indépendantes.
+
+## Réinspection pendant la deuxième passe
+
+Au début de la passe, le launcher installé annonçait **3.3.6.0**. Le fichier
+`profiles/lunar/1.8/profile.json` indiquait `gameVersion=1.8.9`, `loaders=[ichor]`,
+`type=lunar`, `lunar.module=lunar`. Son dossier mods était vide. Ces champs ont été
+lus sélectivement sans publier l'identifiant ou le nom du profil.
+
+Pendant le travail, un exécutable de mise à jour **3.7.24-ow** puis le launcher
+**3.7.24.0** ont été observés. Les profils ont changé d'emplacement vers
+`profiles/1.8` et `profiles/1.21` ; l'ancien fichier profile.json a disparu.
+Ce changement a été observé, pas déclenché par les scripts du dépôt. Aucun processus
+Java de jeu n'a été observé lors de la dernière inspection de cette passe.
+La version du launcher n'est pas la build exacte du client Minecraft.
+
+Un pont diagnostic Forge a été compilé contre le JAR officiel 1.8.9. Il n'a pas été
+copié dans un dossier mods dont le chargeur effectif n'est pas établi. Le dossier
+de destination doit être celui indiqué par l'interface officielle pour le profil
+Forge 1.8.9. L'installation et le chargement dans Lunar restent non vérifiés.
+
+`scripts/Inspect-Lunar.ps1` permet de refaire un diagnostic limité sans afficher
+les arguments de processus ou les fichiers de session.

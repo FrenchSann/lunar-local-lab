@@ -15,6 +15,7 @@ Les simulations sont exécutables. **Aucune fonction n'est intégrée au client 
 | Désarmement lors d'un changement de contexte | Implémenté et testé sur instantanés simulés | Observation réseau réelle manquante |
 | Arrêt et barrière de rappels | Testés pour les rappels enregistrés du laboratoire | Déchargement d'un module Lunar non testé |
 | JNI : attachement, chargeur, références, exception attendue | Diagnostic autonome ; voir résultats | Bloqué dans Lunar |
+| Pont Forge vers JNI | JAR diagnostic compilé, chargé en JVM autonome | Chargement par Lunar non vérifié ; aucune action de jeu |
 | Mappings et adaptateur applicatif | Non implémentés faute de correspondances vérifiées | Bloqués |
 | Configuration | Paramètres C++ validés | Fichiers de profils et UI non implémentés |
 
@@ -77,6 +78,7 @@ Aucune protection n'est désactivée. Aucun mécanisme de furtivité n'est prév
 - [Compatibilité observée et blocages](docs/COMPATIBILITY.md)
 - [Architecture et contrats d'intégration](docs/ARCHITECTURE.md)
 - [Résultats réellement obtenus](docs/TEST_RESULTS.md)
+- [Construire et charger le diagnostic Forge](docs/FORGE_DIAGNOSTIC.md)
 
 Le classement d'armure compare protection, score d'attributs fourni par le modèle,
 durabilité relative puis absolue, et identifiant stable. Ce n'est pas un calcul
