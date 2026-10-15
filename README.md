@@ -93,3 +93,8 @@ validé des dégâts Minecraft. La confirmation serveur n'est pas observée dire
 La portée contrôle une sélection géométrique locale ; elle n'augmente pas la portée
 acceptée par un serveur. Le modèle utilise des boîtes ; l'adaptateur utilise
 également le raytrace de blocs du jeu pour limiter la visibilité.
+
+## Interface Windows
+
+L'executable natif `lunar_control.exe` permet de configurer la portee, la cadence et l'armure, puis de piloter le pont. Voir [le guide](docs/CONTROL_PANEL.md).
+

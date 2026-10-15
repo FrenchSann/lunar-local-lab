@@ -103,3 +103,8 @@ Après réinstallation, armement refusé dans un contexte `loopbackPeer=false`,
 Ces essais ne valident pas encore les clics réels, une transaction d'armure complète,
 les collisions pendant une attaque ou le comportement du serveur. La CI a été
 étendue à la compilation JNI et aux diagnostics dans une JVM de test personnelle.
+
+## Interface C++ Windows (2026-10-16)
+
+Compilation MSVC Release de lunar_control.exe reussie. CTest : 7/7 tests reussis, dont control_panel_validation (bornes, nombres invalides et cadence fractionnaire). Aucun essai graphique interactif ou nouvel essai d'action en jeu n'est revendique.
+
